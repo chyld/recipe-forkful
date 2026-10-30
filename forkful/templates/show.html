@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stamp, csrf_field, ingredient_list %}
+{% block title %}{{ recipe.name }}{% endblock %}
+{% block content %}
+<article class="recipe {{ recipe.id|flavor }}">
+  {% if parent %}
+    <p class="crumb"><a href="{{ url_for('recipes.show', public_id=parent.public_id) }}"><span aria-hidden="true">←</span> Remix of {{ parent.name }}</a></p>
+  {% endif %}
+
+  <header class="recipe-band">
+    <div class="band-inner">
+      <h1 class="display recipe-title">{{ recipe.name }}</h1>
+      {{ stamp(total, "stamp-big") }}
+    </div>
+    <ul class="hero-photos" role="list" aria-label="Photos">
+      {% for p in photos %}
+        <li class="polaroid-frame hero-photo tilt-{{ (p.id * 3) % 5 }}">
+          <span class="tape" aria-hidden="true"></span>
+          {% if loop.first and photos|length > 1 %}<span class="cover-badge"><span aria-hidden="true">⭐</span> Cover</span>{% endif %}
+          <a href="{{ url_for('photos.serve', file_key=p.file_key) }}">
+            <img src="{{ url_for('photos.serve', file_key=p.file_key) }}" width="{{ p.width }}" height="{{ p.height }}"
+                 alt="Photo {{ loop.index }} of {{ recipe.name }}" {% if loop.index > 4 %}loading="lazy"{% endif %} decoding="async">
+          </a>
+        </li>
+      {% else %}
+        <li class="polaroid-frame hero-photo hero-photo-empty tilt-1">
+          <span class="tape" aria-hidden="true"></span>
+          <img src="{{ static_url('img/default-recipe.svg') }}" alt="" width="800" height="600" decoding="async">
+          <span class="polaroid-caption">No photos yet</span>
+        </li>
+      {% endfor %}
+    </ul>
+    <div class="band-actions">
+      <a class="btn btn-grape" href="{{ url_for('recipes.fork', public_id=recipe.public_id) }}" data-fork-dialog="fork-dialog"><span aria-hidden="true">🍴</span> Fork it!</a>
+      <a class="btn btn-lemon" href="{{ url_for('recipes.edit', public_id=recipe.public_id) }}"><span aria-hidden="true">✏️</span> Edit recipe</a>
+      {#- No download attribute: Content-Disposition saves the file, and a login redirect or an error note still shows as a page. #}
+      <a class="btn btn-plain btn-download" href="{{ url_for('recipes.download', public_id=recipe.public_id) }}"
+         aria-label="Download as one HTML file" title="Save this recipe as one HTML file, photos included"><span aria-hidden="true">⬇️</span> <span class="download-label">Download</span></a>
+    </div>
+  </header>
+
+  {% if tags %}
+  <ul class="recipe-tags" role="list" aria-label="Tags">
+    {% for t in tags %}<li><a class="tag-chip" href="{{ url_for('recipes.search', tag=t) }}"><span class="tag-name">{{ t }}</span></a></li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  <div class="recipe-layout">
+    <section class="panel ingredients-panel" aria-labelledby="ingredients-heading">
+      <h2 id="ingredients-heading" class="display panel-title"><span aria-hidden="true">🧺</span> Ingredients</h2>
+      {% if ingredients %}
+        {{ ingredient_list(ingredients, total) }}
+      {% else %}
+        <p class="muted">No ingredients yet. <a href="{{ url_for('recipes.edit', public_id=recipe.public_id) }}">Add some</a>.</p>
+      {% endif %}
+    </section>
+
+    <section class="panel instructions-panel" aria-labelledby="instructions-heading">
+      <h2 id="instructions-heading" class="display panel-title"><span aria-hidden="true">📝</span> Instructions</h2>
+      {% if recipe.instructions %}
+        <div class="instructions">{{ recipe.instructions }}</div>
+      {% else %}
+        <p class="muted">No instructions yet. <a href="{{ url_for('recipes.edit', public_id=recipe.public_id) }}">Write some</a>.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <nav class="family" aria-label="Recipe family">
+    <h2 class="display section-title"><span aria-hidden="true">🌳</span> Recipe family</h2>
+    {% if not parent and not forks %}
+      <p class="family-empty">An original! Fork it to start a family <span aria-hidden="true">🌱</span></p>
+    {% endif %}
+    <div class="family-tree">
+      {% if parent %}
+        <div class="family-row family-parent">
+          <span class="family-label">Parent recipe:</span>
+          <a class="chip {{ parent.id|flavor }}" href="{{ url_for('recipes.show', public_id=parent.public_id) }}">{{ parent.name }}</a>
+        </div>
+      {% endif %}
+      <div class="family-row family-self">
+        <span class="family-label">This recipe:</span>
+        <strong class="chip chip-self {{ recipe.id|flavor }}" aria-current="page">{{ recipe.name }}</strong>
+      </div>
+      {% if forks %}
+        <div class="family-row family-forks">
+          <span class="family-label" id="forks-label">Remixes of this recipe:</span>
+          <ul class="chip-list" role="list" aria-labelledby="forks-label">
+            {% for f in forks %}
+              <li><a class="chip {{ f.id|flavor }}" href="{{ url_for('recipes.show', public_id=f.public_id) }}"><span aria-hidden="true">🌱</span> {{ f.name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+  </nav>
+</article>
+
+<dialog id="fork-dialog" class="dialog card {{ recipe.id|flavor }}" aria-labelledby="fork-dialog-title">
+  <form method="post" action="{{ url_for('recipes.fork', public_id=recipe.public_id) }}" class="stack">
+    {{ csrf_field() }}
+    <h2 id="fork-dialog-title" class="display">Remix “{{ recipe.name }}”</h2>
+    <p class="muted">Your remix starts with the same ingredients, instructions and tags (photos stay with the original).</p>
+    <div class="field">
+      <label for="fork-name">Name your remix</label>
+      <input id="fork-name" name="name" type="text" value="{{ fork_suggestion }}" required maxlength="120"
+             aria-describedby="fork-name-hint" data-select-on-open>
+      <p class="hint" id="fork-name-hint">Must be different from the original name.</p>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-grape" type="submit"><span aria-hidden="true">🍴</span> Fork it!</button>
+      <button class="btn btn-plain" type="button" data-close-dialog>Cancel</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}

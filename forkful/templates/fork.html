@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf_field %}
+{% block title %}Remix {{ recipe.name }}{% endblock %}
+{% block content %}
+<p class="crumb"><a href="{{ url_for('recipes.show', public_id=recipe.public_id) }}"><span aria-hidden="true">←</span> Back to {{ recipe.name }}</a></p>
+<div class="fork-card card {{ recipe.id|flavor }}">
+  <div class="washi" aria-hidden="true"></div>
+  <p class="fork-emoji" aria-hidden="true">🌱</p>
+  <h1 class="display">Remix “{{ recipe.name }}”</h1>
+  <p class="lede">Your remix starts with the same ingredients, instructions and tags. Photos stay with the original.</p>
+
+  {% if error %}
+    <p class="alert" role="alert"><span aria-hidden="true">⚠️</span> {{ error }}</p>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('recipes.fork', public_id=recipe.public_id) }}" class="stack">
+    {{ csrf_field() }}
+    <div class="field{% if error %} has-error{% endif %}">
+      <label for="fork-name">Name your remix</label>
+      <input id="fork-name" name="name" type="text" value="{{ name }}" required maxlength="120"
+             aria-describedby="fork-name-hint" {% if error %}aria-invalid="true"{% endif %} autofocus>
+      <p class="hint" id="fork-name-hint">Must be different from the original name.</p>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-grape btn-big" type="submit"><span aria-hidden="true">🍴</span> Fork it!</button>
+      <a class="btn btn-plain" href="{{ url_for('recipes.show', public_id=recipe.public_id) }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{#- The downloaded recipe: one file with everything inside (PLAN.md §29). It doesn't extend base.html,
+    so nothing from the app (nav, username, forms, scripts, links) comes along unless it's added here.
+    The CSP must stay the first thing after the charset, and the style element must print css exactly:
+    its hash is in the CSP. -#}
+{% from "_macros.html" import stamp, ingredient_list -%}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="{{ csp }}">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="referrer" content="no-referrer">
+<title>{{ recipe.name }}</title>
+<style>{{ css }}</style>
+</head>
+<body class="export">
+<main>
+<article class="recipe {{ recipe.id|flavor }}">
+  {% if parent %}
+    <p class="crumb">Remix of {{ parent.name }}</p>
+  {% endif %}
+
+  <header class="recipe-band">
+    <div class="band-inner">
+      <h1 class="display recipe-title">{{ recipe.name }}</h1>
+      {{ stamp(total, "stamp-big") }}
+    </div>
+    {% if cover %}
+    <div class="hero-photos">
+      <div class="polaroid-frame hero-photo tilt-3">
+        <span class="tape" aria-hidden="true"></span>
+        <img src="{{ cover.src }}" width="{{ cover.width }}" height="{{ cover.height }}" alt="Photo 1 of {{ recipe.name }}">
+      </div>
+    </div>
+    {% endif %}
+  </header>
+
+  {% if tags %}
+  <ul class="recipe-tags" role="list" aria-label="Tags">
+    {% for t in tags %}<li><span class="tag-chip"><span class="tag-name">{{ t }}</span></span></li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  <div class="recipe-layout">
+    <section class="panel ingredients-panel" aria-labelledby="ingredients-heading">
+      <h2 id="ingredients-heading" class="display panel-title"><span aria-hidden="true">🧺</span> Ingredients</h2>
+      {% if ingredients %}
+        {{ ingredient_list(ingredients, total) }}
+      {% else %}
+        <p class="muted">No ingredients listed.</p>
+      {% endif %}
+    </section>
+
+    <section class="panel instructions-panel" aria-labelledby="instructions-heading">
+      <h2 id="instructions-heading" class="display panel-title"><span aria-hidden="true">📝</span> Instructions</h2>
+      {% if recipe.instructions %}
+        <div class="instructions">{{ recipe.instructions }}</div>
+      {% else %}
+        <p class="muted">No instructions written.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  {% if more_photos %}
+  <section class="export-photos" aria-labelledby="photos-heading">
+    <h2 id="photos-heading" class="display section-title"><span aria-hidden="true">📸</span> Photos</h2>
+    <ul class="photo-grid" role="list">
+      {% for p in more_photos %}
+        <li class="polaroid-frame tilt-{{ loop.index % 5 }}">
+          <span class="tape" aria-hidden="true"></span>
+          <img src="{{ p.src }}" width="{{ p.width }}" height="{{ p.height }}" alt="Photo {{ loop.index + 1 }} of {{ recipe.name }}">
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</article>
+</main>
+<footer class="footer">
+  <p><span aria-hidden="true">🥄</span> Saved from Forkful on {{ saved_on|nice_date }}</p>
+</footer>
+</body>
+</html>

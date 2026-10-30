@@ -1,0 +1,56 @@
+<!doctype html>
+{%- set flashes = get_flashed_messages(with_categories=true) %}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#FFF8EC">
+  <title>{% block title %}Forkful{% endblock %} · Forkful</title>
+  <link rel="icon" href="{{ static_url('favicon.svg') }}" type="image/svg+xml">
+  <link rel="preload" href="{{ url_for('static', filename='fonts/fredoka-latin-wght.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ static_url('css/forkful.css') }}">
+  <script src="{{ static_url('js/forkful.js') }}" defer></script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  {% if g.user %}
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('recipes.index') }}">
+      <span class="brand-mark" aria-hidden="true">🍴</span>
+      <span class="brand-name">Forkful</span>
+    </a>
+    <nav class="topnav" aria-label="Main">
+      <a class="topnav-link" href="{{ url_for('recipes.index') }}"{% if request.endpoint == "recipes.index" %} aria-current="page"{% endif %}>My recipes</a>
+      <a class="btn btn-small btn-grape topnav-search" href="{{ url_for('recipes.search') }}" aria-label="Search"{% if request.endpoint == "recipes.search" %} aria-current="page"{% endif %}><span aria-hidden="true">🔍</span><span class="nav-label">Search</span></a>
+      {%- set here = recipe.public_id if recipe is defined and recipe else none %}
+      <a class="btn btn-small btn-mint topnav-random" href="{{ url_for('recipes.random', skip=here) }}" aria-label="Random recipe"><span aria-hidden="true">🎲</span><span class="nav-label">Random</span></a>
+      <a class="btn btn-small btn-tomato" href="{{ url_for('recipes.new') }}" aria-label="New recipe"><span aria-hidden="true">＋</span><span>New<span class="wide-only"> recipe</span></span></a>
+      <form class="inline-form" method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="link-button" type="submit">Log out <span class="who">{{ g.user.username }}</span></button>
+      </form>
+    </nav>
+  </header>
+  {% endif %}
+
+  <div class="toasts">
+    {% for category, message in flashes %}
+      <div class="toast toast-{{ category }}" role="status" tabindex="0">
+        <span class="toast-icon" aria-hidden="true">{% if category == "celebrate" %}🎉{% elif category == "success" %}✅{% else %}👋{% endif %}</span>
+        <span>{{ message }}</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <main id="main" class="{% block main_class %}page{% endblock %}" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <p><span aria-hidden="true">🥄</span> Cook it. Fork it. Love it.</p>
+    <p class="version">Forkful v{{ app_version }} · {% if app_build %}built {{ app_build }}{% else %}development build{% endif %}</p>
+  </footer>
+</body>
+</html>

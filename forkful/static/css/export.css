@@ -1,0 +1,50 @@
+/* The downloaded recipe file (forkful/export.py puts this after forkful.css in one <style>).
+   It's a page to keep, read and print, not to click: no buttons or links, the cover photo in
+   the band, the other photos whole (not cropped) in a grid below the instructions.
+   Nothing in here may load a file: everything the download needs must already be inside it. */
+
+.export main { padding-top: 2rem; }
+.export .crumb { font-weight: 700; color: var(--muted); }
+
+/* The band holds just the title card and the cover. */
+.export .hero-photos { overflow: visible; justify-content: center; }
+.export .polaroid-frame.hero-photo { width: min(15rem, 80%); padding: 8px 8px 22px; }
+@media (min-width: 821px) {
+  .export .recipe-band { grid-template-areas: "title photos"; align-items: center; }
+  .export .hero-photos { margin: -.5rem 0 -.25rem; }
+  .export .polaroid-frame.hero-photo { width: 13rem; }
+}
+
+/* Tags are labels here, not tap targets. */
+.export .tag-chip { min-height: 0; padding: .2rem .8rem; }
+
+.photo-grid {
+  list-style: none; margin: 0; padding: 14px 6px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 2rem 1.5rem;
+  align-items: start;
+}
+.photo-grid .polaroid-frame { padding: 8px 8px 22px; }
+.photo-grid .polaroid-frame img { aspect-ratio: auto; object-fit: contain; }   /* the whole photo */
+
+@media print {
+  @page { margin: 14mm; }
+  html, body { background: #fff; }
+  body { display: block; min-height: 0; }
+  .export main { width: auto; padding: 0; }
+  /* The cover beside the title, so the ingredients start on page one. */
+  .export .recipe-band { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1rem; padding: 1rem; }
+  .export .band-inner { flex-wrap: nowrap; }
+  .export .hero-photos { margin: 0; padding: 0; }
+  .export .polaroid-frame.hero-photo { width: 10rem; }
+  .recipe-band, .panel, .polaroid-frame, .tag-chip { box-shadow: none; }
+  .polaroid-frame { rotate: none; }
+  .tape { display: none; }
+  .stamp { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .instructions { background: none; }
+  .recipe-band, .ingredient, .ingredient-total, .polaroid-frame { break-inside: avoid; }
+  .panel-title, .section-title { break-after: avoid; }
+  .photo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+  .footer { padding-bottom: 0; }
+}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% from "_macros.html" import recipe_grid, empty_box %}
+{% block title %}My recipes{% endblock %}
+{% block content %}
+<h1 class="sr-only">My recipes</h1>
+
+{% if recipes %}
+  {{ recipe_grid(recipes, card_tags, new_card=true) }}
+{% else %}
+  {{ empty_box() }}
+{% endif %}
+{% endblock %}

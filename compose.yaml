@@ -1,0 +1,31 @@
+name: forkful
+
+services:
+  web:
+    build: .
+    init: true
+    ports:
+      - "7777:7777"            # all interfaces: reachable from the public internet over plain HTTP
+    volumes:
+      - forkful-data:/data     # database, photos, and secret key; one volume, one backup
+    restart: unless-stopped
+    stop_signal: SIGINT        # waitress shuts down gracefully on SIGINT
+    stop_grace_period: 30s
+    mem_limit: 2g
+    pids_limit: 256
+    healthcheck:
+      # A real request through Flask (not just an open port): the login page must render.
+      test: ["CMD", "python", "-c", "import urllib.request as u; assert u.urlopen('http://127.0.0.1:7777/login', timeout=3).status == 200"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  forkful-data:
+    name: forkful-data         # pinned, so renaming the folder can't orphan your recipes

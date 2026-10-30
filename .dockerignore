@@ -1,0 +1,14 @@
+.git
+.gitignore
+.venv
+tests
+pytest.ini
+requirements-dev.txt
+**/__pycache__
+.pytest_cache
+*.db
+*.db-wal
+*.db-shm
+data/
+PLAN.md
+README.md

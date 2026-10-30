@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="A covered dish waiting for its first photo">
+  <defs>
+    <pattern id="check" width="80" height="80" patternUnits="userSpaceOnUse">
+      <rect width="80" height="80" fill="#FFF8EC"/>
+      <rect width="40" height="80" fill="#FFD23F" opacity="0.28"/>
+      <rect width="80" height="40" fill="#FFD23F" opacity="0.28"/>
+    </pattern>
+    <radialGradient id="dome" cx="38%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.45" stop-color="#E9ECEF"/>
+      <stop offset="1" stop-color="#B9C0C7"/>
+    </radialGradient>
+    <radialGradient id="plate" cx="50%" cy="40%" r="60%">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F1EEE8"/>
+    </radialGradient>
+  </defs>
+
+  <!-- tablecloth -->
+  <rect width="800" height="600" fill="url(#check)"/>
+
+  <!-- sparkles -->
+  <g fill="#FF66C4" stroke="#2B2118" stroke-width="4" stroke-linejoin="round">
+    <path d="M140 120 l12 30 30 12 -30 12 -12 30 -12 -30 -30 -12 30 -12z"/>
+    <path d="M662 150 l9 22 22 9 -22 9 -9 22 -9 -22 -22 -9 22 -9z" fill="#2EC4B6"/>
+    <path d="M700 500 l8 19 19 8 -19 8 -8 19 -8 -19 -19 -8 19 -8z" fill="#FFD23F"/>
+  </g>
+  <g fill="#FF5A4E">
+    <circle cx="96" cy="430" r="10"/>
+    <circle cx="760" cy="420" r="8"/>
+    <circle cx="245" cy="70" r="7"/>
+  </g>
+
+  <!-- steam -->
+  <g fill="none" stroke="#2B2118" stroke-width="7" stroke-linecap="round" opacity="0.55">
+    <path d="M345 150 c-22 -22 22 -40 0 -68"/>
+    <path d="M400 135 c-22 -24 22 -44 0 -76"/>
+    <path d="M455 150 c-22 -22 22 -40 0 -68"/>
+  </g>
+
+  <!-- plate shadow, plate -->
+  <ellipse cx="410" cy="478" rx="262" ry="46" fill="#2B2118" opacity="0.16"/>
+  <ellipse cx="400" cy="462" rx="262" ry="50" fill="url(#plate)" stroke="#2B2118" stroke-width="7"/>
+  <ellipse cx="400" cy="458" rx="190" ry="30" fill="none" stroke="#2B2118" stroke-width="3" opacity="0.25"/>
+
+  <!-- cloche -->
+  <path d="M190 448 C190 300 290 220 400 220 C510 220 610 300 610 448 Z" fill="url(#dome)" stroke="#2B2118" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M250 400 C258 330 300 282 350 262" fill="none" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round" opacity="0.9"/>
+  <rect x="170" y="440" width="460" height="22" rx="11" fill="#FF5A4E" stroke="#2B2118" stroke-width="7"/>
+
+  <!-- handle -->
+  <rect x="376" y="196" width="48" height="30" rx="10" fill="#2B2118"/>
+  <circle cx="400" cy="186" r="24" fill="#FFD23F" stroke="#2B2118" stroke-width="7"/>
+
+  <!-- fork and spoon -->
+  <g stroke="#2B2118" stroke-width="7" stroke-linecap="round" fill="none">
+    <path d="M86 300 v120"/>
+    <path d="M70 252 v40 a16 16 0 0 0 32 0 v-40"/>
+    <path d="M86 252 v40"/>
+    <path d="M714 400 v-110"/>
+  </g>
+  <ellipse cx="714" cy="262" rx="20" ry="30" fill="#2EC4B6" stroke="#2B2118" stroke-width="7"/>
+</svg>

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% from "_macros.html" import recipe_grid, empty_box %}
+{% block title -%}
+  {%- if problem %}Search
+  {%- elif words %}Recipes mentioning {{ words|join(" + ") }}{% if selected %}, tagged {{ selected|join(" + ") }}{% endif %}
+  {%- elif selected %}Recipes tagged {{ selected|join(" + ") }}
+  {%- else %}Search{% endif -%}
+{%- endblock %}
+{% macro tag_list(tags) -%}
+  {%- for t in tags -%}<span class="tag-word">{{ t }}</span>{{ " + " if not loop.last }}{%- endfor -%}
+{%- endmacro %}
+{% macro word_list(words) -%}
+  {%- for w in words -%}<span class="search-word">“{{ w }}”</span>{{ " + " if not loop.last }}{%- endfor -%}
+{%- endmacro %}
+{% macro with_tags(tags) -%}
+  {%- if tags %} with {{ "all of " if tags|length > 1 }}{{ tag_list(tags) }}{% endif -%}
+{%- endmacro %}
+{% block content %}
+{% set n = recipes|length %}
+{% set searching = q or selected or problem %}
+{% set box_empty = not recipes and not searching %}
+{% set active = sort or "new" %}
+{% set sorts = [("new", "🕒", "Freshest"), ("cal-asc", "🥗", "Fewest calories"), ("cal-desc", "🍔", "Most calories")] %}
+{% set order = {"new": "freshest first", "cal-asc": "fewest calories first", "cal-desc": "most calories first"}[active] %}
+<div class="page-head">
+  <h1 class="display">Find a recipe</h1>
+  {% if problem %}
+    <p class="lede">Nothing to show for that search.</p>
+  {% elif searching %}
+    <p class="lede">
+      {% if n and words %}{{ n }} recipe{{ "" if n == 1 else "s" }} mentioning {{ word_list(words) }}{{ with_tags(selected) }}, {{ order }}.
+      {% elif n %}{{ n }} recipe{{ "" if n == 1 else "s" }}{{ with_tags(selected) }}, {{ order }}.
+      {% elif words %}No recipes mention {{ word_list(words) }}{{ with_tags(selected) }}.
+      {% else %}No recipes have {{ "all of " if selected|length > 1 }}{{ tag_list(selected) }}.{% endif %}
+    </p>
+    <ul class="search-tray" role="list" aria-label="Your search">
+      {% if q %}
+        <li><a class="tag-remove words-remove" href="{{ url_for('recipes.search', tag=selected, sort=sort) }}">
+          <span class="words-text">“{{ q }}”</span><span aria-hidden="true">✕</span><span class="sr-only"> (remove the words)</span></a></li>
+      {% endif %}
+      {% for t in selected %}
+        <li><a class="tag-remove" href="{{ url_for('recipes.search', q=q, tag=selected|reject('equalto', t)|list, sort=sort) }}">
+          <span class="tag-name">{{ t }}</span><span aria-hidden="true">✕</span><span class="sr-only"> (remove)</span></a></li>
+      {% endfor %}
+      <li><a class="clear-filter" href="{{ url_for('recipes.search', sort=sort) }}">Clear search</a></li>
+    </ul>
+  {% elif n %}
+    <p class="lede">All {{ n }} recipe{{ "" if n == 1 else "s" }}, {{ order }}.</p>
+  {% else %}
+    <p class="lede">Nothing here yet.</p>
+  {% endif %}
+</div>
+
+{% if not box_empty %}
+<form class="search-form" method="get" action="{{ url_for('recipes.search') }}" role="search" aria-label="Search recipes"
+      data-tag-bar data-max-tags="{{ max_search_tags }}">
+  <div class="words-field">
+    <label class="search-legend" for="q">Search words</label>
+    <p class="hint" id="q-hint">Looks in names, ingredients and instructions. Every word must match.</p>
+    <input class="words-input" id="q" type="search" name="q" value="{{ q or '' }}" maxlength="{{ search_text_max }}"
+           placeholder="e.g. garlic tomato" enterkeyhint="search" autocapitalize="none" autocorrect="off"
+           spellcheck="false" aria-describedby="q-hint">
+  </div>
+  <fieldset class="tag-bar">
+    {% if tag_counts %}
+      <legend class="search-legend">Tags <span class="legend-note">Recipes must have every tag you pick.</span></legend>
+      <ul role="list">
+        <li><a class="tag-chip tag-chip-all" href="{{ url_for('recipes.search', q=q, sort=sort) }}"{% if not selected and not tag_problem %} aria-current="true"{% endif %}>All</a></li>
+        {% for t in tag_counts %}
+          <li>
+            <label class="tag-chip tag-check">
+              <input type="checkbox" name="tag" value="{{ t.tag }}"{% if t.tag in selected %} checked{% endif %}>
+              <span class="tag-name">{{ t.tag }}</span>
+              <span class="tag-count"><span class="sr-only">, </span>{{ t.n }}<span class="sr-only"> recipe{{ "" if t.n == 1 else "s" }} in all</span></span>
+            </label>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <legend class="search-legend">Tags</legend>
+      <p class="hint">No tags yet. Add some on a recipe's edit page, then pick them here.</p>
+    {% endif %}
+  </fieldset>
+  <fieldset class="sort-bar">
+    <legend class="search-legend">Sort by</legend>
+    <ul role="list">
+      {% for value, emoji, label in sorts %}
+        <li><label class="tag-chip tag-check sort-chip">
+          <input type="radio" name="sort" value="{{ value }}"{% if value == active %} checked{% endif %}>
+          <span aria-hidden="true">{{ emoji }}</span> {{ label }}
+        </label></li>
+      {% endfor %}
+    </ul>
+  </fieldset>
+  <div class="tag-search-row">
+    <button class="btn btn-grape tag-search" type="submit" data-tag-search><span aria-hidden="true">🔍</span> <span data-tag-search-label>Search</span></button>
+  </div>
+</form>
+{% endif %}
+
+{% if box_empty %}
+  {{ empty_box() }}
+{% elif searching and not recipes %}
+<div class="empty card flavor-4">
+  <div class="washi" aria-hidden="true"></div>
+  <p class="empty-emoji" aria-hidden="true">{{ "🏷️" if tag_problem or not (q or problem) else "🔍" }}</p>
+  {% if problem == "invalid" %}
+    <h2 class="display">That isn't a tag</h2>
+    <p>Tags are 2–24 letters a–z, like “soup”. Fix the search and try again.</p>
+  {% elif problem == "too_many" %}
+    <h2 class="display">Pick up to {{ max_search_tags }} tags</h2>
+    <p>Untick a few and search again.</p>
+  {% elif problem == "too_long" %}
+    <h2 class="display">That search is too long</h2>
+    <p>Use up to {{ search_text_max }} characters. A few good words work best.</p>
+  {% elif problem == "too_many_words" %}
+    <h2 class="display">Use up to {{ max_search_words }} words</h2>
+    <p>Every word has to match, so fewer words find more.</p>
+  {% elif words %}
+    <h2 class="display">No recipes mention {{ word_list(words) }}{{ with_tags(selected) }}</h2>
+    <p>Try fewer words{% if selected %}, or remove a tag{% endif %}.</p>
+  {% elif selected|length > 1 %}
+    <h2 class="display">No recipes have all of {{ tag_list(selected) }}</h2>
+    <p>Try removing one of the tags above.</p>
+  {% else %}
+    <h2 class="display">No recipes tagged {{ tag_list(selected) }}</h2>
+    <p>Add the tag on a recipe's edit page, or pick another tag.</p>
+  {% endif %}
+  <p><a class="btn btn-mint btn-big" href="{{ url_for('recipes.search', sort=sort) }}">Show all recipes</a></p>
+</div>
+{% else %}
+  {{ recipe_grid(recipes, card_tags, by_calories=sort is not none) }}
+{% endif %}
+{% endblock %}

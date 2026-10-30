@@ -1,0 +1,86 @@
+{% macro csrf_field() -%}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}
+
+{% macro stamp(total, size="") -%}
+  <span class="stamp {{ size }}"><span class="stamp-fire" aria-hidden="true">🔥</span><span class="stamp-number">{{ total|calories }}</span><span class="stamp-unit">calories</span></span>
+{%- endmacro %}
+
+{# The recipe page and the downloaded file (export.html) list ingredients the same way. No links here. #}
+{% macro ingredient_list(ingredients, total) -%}
+  <ul class="ingredient-list" role="list">
+    {% for i in ingredients %}
+      <li class="ingredient">
+        <span class="ingredient-name">{{ i.name }}</span>
+        {% if i.amount %}<span class="ingredient-amount">{{ i.amount }}</span>{% endif %}
+        <span class="cal-pill">{{ i.calories|calories }} cal</span>
+      </li>
+    {% endfor %}
+  </ul>
+  <p class="ingredient-total">Total: <strong>{{ total|calories }} calories</strong></p>
+{%- endmacro %}
+
+{% macro field_error(message, id) -%}
+  {% if message %}<p class="field-error" id="{{ id }}"><span aria-hidden="true">⚠️</span> {{ message }}</p>{% endif %}
+{%- endmacro %}
+
+{# The recipe cards, shared by the home page and the search page. #}
+{% macro recipe_grid(recipes, card_tags, new_card=false, by_calories=false) -%}
+<ul class="recipe-grid{% if by_calories %} by-calories{% endif %}" role="list">
+  {% if new_card %}
+  <li class="grid-new">
+    <a class="new-card" href="{{ url_for('recipes.new') }}">
+      <span class="new-plus" aria-hidden="true">＋</span>
+      <span class="new-label">New recipe</span>
+    </a>
+  </li>
+  {% endif %}
+  {% for r in recipes %}
+  <li>
+    <a class="recipe-card card {{ r.id|flavor }} {{ r.id|tilt }}" href="{{ url_for('recipes.show', public_id=r.public_id) }}">
+      <span class="washi" aria-hidden="true"></span>
+      {% if r.cover_key %}
+        <span class="polaroid">
+          <img src="{{ url_for('photos.serve', file_key=r.cover_key) }}" alt=""
+               {% if loop.index > 3 %}loading="lazy"{% endif %} decoding="async">
+        </span>
+      {% else %}
+        <span class="polaroid polaroid-default">
+          <img src="{{ static_url('img/default-recipe.svg') }}" alt=""
+               {% if loop.index > 3 %}loading="lazy"{% endif %} decoding="async">
+        </span>
+      {% endif %}
+      <span class="card-body">
+        <span class="card-title">{{ r.name }}</span>
+        {% set rtags = card_tags.get(r.id, []) %}
+        {% if rtags %}
+          <span class="card-tags">
+            {% for t in rtags[:3] %}<span class="tag-pill{% if loop.index == 3 %} wide-only-tag{% endif %}">{{ t }}</span>{% endfor %}
+            {# Phones show 2 tags, wider screens 3; each gets its own "+N" for the rest. #}
+            {% if rtags|length > 2 %}<span class="tag-more phone-only-tag">+{{ rtags|length - 2 }}</span>{% endif %}
+            {% if rtags|length > 3 %}<span class="tag-more wide-only-tag">+{{ rtags|length - 3 }}</span>{% endif %}
+          </span>
+        {% endif %}
+        {% if r.parent_id %}
+          <span class="sticker sticker-remix" title="Remix of {{ r.parent_name }}"><span aria-hidden="true">🌱</span> Remix of {{ r.parent_name }}</span>
+        {% endif %}
+        <span class="card-meta">
+          {{ stamp(r.total_calories, "stamp-small") }}
+          <span class="updated">Updated {{ r.updated_at|nice_date }}</span>
+        </span>
+      </span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro empty_box() -%}
+<div class="empty card flavor-2">
+  <div class="washi" aria-hidden="true"></div>
+  <p class="empty-emoji" aria-hidden="true">🧑‍🍳</p>
+  <h2 class="display">Your recipe box is empty!</h2>
+  <p>Let's cook something up.</p>
+  <p><a class="btn btn-tomato btn-big" href="{{ url_for('recipes.new') }}"><span aria-hidden="true">＋</span> Create your first recipe</a></p>
+</div>
+{%- endmacro %}

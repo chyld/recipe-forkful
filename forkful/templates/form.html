@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf_field, field_error %}
+{% block title %}{{ "Edit " ~ recipe.name if recipe else "New recipe" }}{% endblock %}
+
+{% macro ing_row(i, n, row) -%}
+<li class="ing-row{% if row and row.errors %} has-error{% endif %}" data-ing-row>
+  <div class="ing-field ing-name">
+    <label for="ing-{{ i }}-name"><span class="ing-label-text">Ingredient</span><span class="sr-only" data-row-number> {{ n }}</span><span class="sr-only"> name</span></label>
+    <input id="ing-{{ i }}-name" name="ing-{{ i }}-name" type="text" value="{{ row.name if row else '' }}"
+           maxlength="200" autocomplete="off"{% if n == 1 %} placeholder="Flour"{% endif %}
+           {% if row and row.errors.name %}aria-invalid="true" aria-describedby="ing-{{ i }}-name-error"{% endif %}>
+    {% if row %}{{ field_error(row.errors.name, "ing-" ~ i ~ "-name-error") }}{% endif %}
+  </div>
+  <div class="ing-field ing-amount">
+    <label for="ing-{{ i }}-amount"><span class="ing-label-text">Amount</span><span class="sr-only"> for ingredient</span><span class="sr-only" data-row-number> {{ n }}</span></label>
+    <input id="ing-{{ i }}-amount" name="ing-{{ i }}-amount" type="text" value="{{ row.amount if row else '' }}"
+           maxlength="100" autocomplete="off"{% if n == 1 %} placeholder="2 cups"{% endif %}
+           {% if row and row.errors.amount %}aria-invalid="true" aria-describedby="ing-{{ i }}-amount-error"{% endif %}>
+    {% if row %}{{ field_error(row.errors.amount, "ing-" ~ i ~ "-amount-error") }}{% endif %}
+  </div>
+  <div class="ing-field ing-calories">
+    <label for="ing-{{ i }}-calories"><span class="ing-label-text">Calories</span><span class="sr-only"> for ingredient</span><span class="sr-only" data-row-number> {{ n }}</span></label>
+    <input id="ing-{{ i }}-calories" name="ing-{{ i }}-calories" type="text" value="{{ row.calories if row else '' }}"
+           inputmode="numeric" pattern="{{ calories_pattern }}" maxlength="7" autocomplete="off"{% if n == 1 %} placeholder="0"{% endif %}
+           title="A whole number from 0 to 1,000,000, like 120" data-calories
+           {% if row and row.errors.calories %}aria-invalid="true" aria-describedby="ing-{{ i }}-calories-error"{% endif %}>
+    {% if row %}{{ field_error(row.errors.calories, "ing-" ~ i ~ "-calories-error") }}{% endif %}
+  </div>
+  <button class="ing-remove" type="button" data-remove-row hidden>
+    <span aria-hidden="true">✕</span><span class="sr-only">Remove ingredient</span><span class="sr-only" data-row-number> {{ n }}</span>
+  </button>
+</li>
+{%- endmacro %}
+
+{% block content %}
+{% set action = url_for('recipes.edit', public_id=recipe.public_id) if recipe else url_for('recipes.new') %}
+{% set max_mb = config.MAX_PHOTO_BYTES // 1048576 %}
+{% set request_mb = config.MAX_CONTENT_LENGTH // 1048576 %}
+
+{% if recipe %}
+  <p class="crumb"><a href="{{ url_for('recipes.show', public_id=recipe.public_id) }}"><span aria-hidden="true">←</span> Back to {{ recipe.name }}</a></p>
+{% endif %}
+
+<div class="page-head">
+  <h1 class="display">{% if recipe %}Edit recipe{% else %}New recipe <span aria-hidden="true">🥣</span>{% endif %}</h1>
+  <p class="lede">{% if recipe %}Change anything you like. Saving overwrites the recipe; there are no versions.{% else %}Write it down before you forget it.{% endif %}</p>
+</div>
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data" class="recipe-form"
+      data-recipe-form data-max-request="{{ config.MAX_CONTENT_LENGTH }}" data-max-photo="{{ config.MAX_PHOTO_BYTES }}">
+  {{ csrf_field() }}
+
+  {% if form.has_errors %}
+  <div class="error-summary" role="alert" tabindex="-1" data-error-summary>
+    <h2 class="display">Let's fix a few things</h2>
+    <ul>
+      {% for message in form.error_summary() %}<li>{{ message }}</li>{% endfor %}
+    </ul>
+    <p class="hint">If you had just picked photos, they weren't saved. Please choose them again.</p>
+  </div>
+  {% endif %}
+
+  <section class="panel">
+    <div class="field{% if form.errors.name %} has-error{% endif %}">
+      <label for="name" class="label-big">Recipe name</label>
+      <input id="name" name="name" type="text" value="{{ form.name }}" required maxlength="120"
+             placeholder="Grandma's famous pancakes" autocomplete="off"
+             {% if form.errors.name %}aria-invalid="true" aria-describedby="name-error"{% endif %}>
+      {{ field_error(form.errors.name, "name-error") }}
+    </div>
+    <div class="field tags-field{% if form.errors.tags %} has-error{% endif %}">
+      <label for="tags">Tags <span class="optional">(optional)</span></label>
+      <input id="tags" name="tags" type="text" value="{{ form.tags_text }}" maxlength="300"
+             placeholder="soup, quick, vegan" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"
+             aria-describedby="tags-hint{% if form.errors.tags %} tags-error{% endif %}"
+             {% if form.errors.tags %}aria-invalid="true"{% endif %}>
+      <p class="hint" id="tags-hint">Letters a–z only. Separate with commas or spaces. Up to 10.</p>
+      {{ field_error(form.errors.tags, "tags-error") }}
+    </div>
+  </section>
+
+  <section class="panel ingredients-editor" aria-labelledby="ingredients-heading">
+    <div class="panel-head">
+      <h2 id="ingredients-heading" class="display panel-title"><span aria-hidden="true">🧺</span> Ingredients</h2>
+      <p class="live-total" data-live-total hidden>Total so far: <strong data-live-total-value>0</strong> calories</p>
+    </div>
+    {{ field_error(form.errors.ingredients, "ingredients-error") }}
+    <ol class="ing-rows" data-ing-rows role="list">
+      {% for row in form.rows %}{{ ing_row(loop.index0, loop.index, row) }}{% endfor %}
+    </ol>
+    <template data-row-template>{{ ing_row("__I__", "__N__", none) }}</template>
+    <div class="ing-footer">
+      <button class="btn btn-mint btn-small" type="button" data-add-row hidden><span aria-hidden="true">＋</span> Add ingredient</button>
+      <noscript><p class="hint">Need more rows? Save, then edit the recipe to get more blank rows. Empty rows are ignored.</p></noscript>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="field{% if form.errors.instructions %} has-error{% endif %}">
+      <label for="instructions" class="label-big"><span aria-hidden="true">📝</span> Instructions</label>
+      <textarea id="instructions" name="instructions" rows="10" maxlength="50000"
+                placeholder="1. Whisk everything together.&#10;2. Cook until golden.&#10;3. Eat warm."
+                {% if form.errors.instructions %}aria-invalid="true" aria-describedby="instructions-error"{% endif %}>{{ form.instructions }}</textarea>
+      {{ field_error(form.errors.instructions, "instructions-error") }}
+    </div>
+  </section>
+
+  <section class="panel photos-editor" aria-labelledby="photos-heading">
+    <h2 id="photos-heading" class="display panel-title"><span aria-hidden="true">📸</span> Photos</h2>
+    {{ field_error(form.errors.photos, "photos-error") }}
+
+    {% set chosen = form.cover if form.cover and form.cover[0] == "photo" else none %}
+    {% if existing_photos %}
+      <p class="hint">The <span aria-hidden="true">⭐</span> cover photo is the one shown on your recipe list. Delete removes a photo right away.</p>
+      <ul class="thumb-grid" role="list">
+        {% for p in existing_photos %}
+          {% set is_cover = (chosen[1] == p.file_key) if chosen else loop.first %}
+          <li class="thumb" data-photo-tile>
+            <img src="{{ url_for('photos.serve', file_key=p.file_key) }}" alt="" loading="lazy" decoding="async">
+            <label class="thumb-toggle thumb-cover">
+              <input type="radio" name="cover" value="photo-{{ p.file_key }}" {% if is_cover %}checked{% endif %}>
+              <span><span aria-hidden="true">⭐</span> Cover<span class="sr-only"> photo: photo {{ loop.index }}</span></span>
+            </label>
+            <button class="thumb-delete" type="submit" formnovalidate data-delete-photo
+                    formaction="{{ url_for('recipes.delete_photo', public_id=recipe.public_id, file_key=p.file_key) }}">
+              <span aria-hidden="true">🗑️</span> Delete<span class="sr-only"> photo {{ loop.index }}</span>
+            </button>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <div class="dropzone" data-dropzone>
+      <input class="dropzone-input" id="photos" name="photos" type="file" multiple accept="{{ accept }}"
+             aria-describedby="photo-size-warning{% if form.errors.photos %} photos-error{% endif %}"
+             {% if form.errors.photos %}aria-invalid="true"{% endif %}>
+      <label class="dropzone-label" for="photos">
+        <span class="dz-emoji" aria-hidden="true">📸</span>
+        <span class="dz-title">Drop tasty pics here</span>
+        <span class="dz-sub">or tap to choose · JPEG, PNG, or WebP · up to {{ max_mb }} MB each</span>
+      </label>
+    </div>
+    <ul class="preview-grid" data-previews role="list" hidden></ul>
+    <p class="field-error" id="photo-size-warning" data-size-warning role="alert" tabindex="-1" hidden></p>
+    <p class="hint">New photos are added at the end, in the order you pick them. {% if not existing_photos %}The first one becomes the cover unless you pick another. {% endif %}Each save can carry up to {{ request_mb }} MB of photos; add more in your next save.</p>
+  </section>
+
+  <div class="savebar">
+    <a class="btn btn-plain" href="{{ url_for('recipes.show', public_id=recipe.public_id) if recipe else url_for('recipes.index') }}">Cancel</a>
+    <button class="btn btn-tomato btn-big" type="submit"><span aria-hidden="true">💾</span> Save recipe</button>
+  </div>
+</form>
+{% endblock %}
