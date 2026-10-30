@@ -8,6 +8,7 @@ NAME_MAX = 120
 INSTRUCTIONS_MAX = 50_000
 INGREDIENT_NAME_MAX = 200
 AMOUNT_MAX = 100
+NOTES_MAX = 300
 CALORIES_MAX = 1_000_000
 MAX_INGREDIENTS = 200
 NEW_BLANK_ROWS = 5
@@ -19,7 +20,7 @@ CALORIES_PATTERN = "0|[1-9][0-9]{0,5}|1000000"
 CALORIES_RE = re.compile(CALORIES_PATTERN, re.ASCII)
 # Only ASCII whitespace is trimmed, matching the JS side exactly.
 ASCII_SPACE = " \t\n\r\f\v"
-INGREDIENT_KEY_RE = re.compile(r"ing-([0-9]{1,4})-(name|amount|calories)", re.ASCII)
+INGREDIENT_KEY_RE = re.compile(r"ing-([0-9]{1,4})-(name|amount|calories|notes)", re.ASCII)
 MAX_ID_DIGITS = 19   # SQLite integers fit in 19 digits; longer strings aren't ids (and int() refuses > 4300)
 # The cover choice: an existing photo ("photo-<file key>") or the n-th newly uploaded file ("new-<n>").
 COVER_RE = re.compile(r"photo-(?P<key>[0-9a-f]{32})|new-(?P<new>[0-9]{1,19})", re.ASCII)
@@ -79,11 +80,12 @@ class IngredientRow:
     name: str = ""
     amount: str = ""
     calories: str = ""
+    notes: str = ""
     errors: dict = field(default_factory=dict)
 
     @property
     def blank(self):
-        return not (self.name or self.amount or self.calories.strip())
+        return not (self.name or self.amount or self.calories.strip() or self.notes)
 
 
 @dataclass
@@ -108,9 +110,9 @@ class RecipeForm:
         return messages
 
     def ingredients(self):
-        """Validated rows as (position, name, amount, calories) tuples, positions 0..n-1."""
+        """Validated rows as (position, name, amount, calories, notes) tuples, positions 0..n-1."""
         return [
-            (position, row.name, row.amount, parse_calories(row.calories)[0])
+            (position, row.name, row.amount, parse_calories(row.calories)[0], row.notes)
             for position, row in enumerate(self.rows)
         ]
 
@@ -127,7 +129,7 @@ def form_from_recipe(recipe, ingredients, tags=()):
     form = RecipeForm(name=recipe["name"], instructions=recipe["instructions"],
                       tags=list(tags), tags_text=", ".join(tags))
     form.rows = [
-        IngredientRow(name=i["name"], amount=i["amount"], calories=str(i["calories"]))
+        IngredientRow(name=i["name"], amount=i["amount"], calories=str(i["calories"]), notes=i["notes"])
         for i in ingredients
     ]
     return form.with_blank_rows(EDIT_BLANK_ROWS)
@@ -165,6 +167,7 @@ def parse_recipe_form(data, photo_keys=()):
             name=clean_line(values.get("name", "")),
             amount=clean_line(values.get("amount", "")),
             calories=values.get("calories", "").strip(ASCII_SPACE),
+            notes=clean_line(values.get("notes", "")),
         )
         if row.blank:
             continue
@@ -174,6 +177,8 @@ def parse_recipe_form(data, photo_keys=()):
             row.errors["name"] = f"Ingredient names can be up to {INGREDIENT_NAME_MAX} characters."
         if len(row.amount) > AMOUNT_MAX:
             row.errors["amount"] = f"Amounts can be up to {AMOUNT_MAX} characters."
+        if len(row.notes) > NOTES_MAX:
+            row.errors["notes"] = f"Notes can be up to {NOTES_MAX} characters."
         _, calorie_error = parse_calories(row.calories)
         if calorie_error:
             row.errors["calories"] = calorie_error

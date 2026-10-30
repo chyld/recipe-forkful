@@ -153,10 +153,11 @@ def internal_id(db, public_id):
 def recipe_data(name, ingredients=(), instructions="", photos=(), tags=""):
     data = {"name": name, "instructions": instructions, "tags": tags}
     for i, row in enumerate(ingredients):
-        ing_name, amount, calories = (list(row) + ["", "", ""])[:3]
+        ing_name, amount, calories, notes = (list(row) + ["", "", "", ""])[:4]
         data[f"ing-{i}-name"] = ing_name
         data[f"ing-{i}-amount"] = amount
         data[f"ing-{i}-calories"] = str(calories)
+        data[f"ing-{i}-notes"] = notes
     data["photos"] = [(io.BytesIO(content), filename) for filename, content in photos]
     return data
 

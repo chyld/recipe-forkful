@@ -26,6 +26,13 @@
            {% if row and row.errors.calories %}aria-invalid="true" aria-describedby="ing-{{ i }}-calories-error"{% endif %}>
     {% if row %}{{ field_error(row.errors.calories, "ing-" ~ i ~ "-calories-error") }}{% endif %}
   </div>
+  <div class="ing-field ing-notes">
+    <label for="ing-{{ i }}-notes"><span class="ing-label-text">Notes</span><span class="sr-only"> for ingredient</span><span class="sr-only" data-row-number> {{ n }}</span></label>
+    <input id="ing-{{ i }}-notes" name="ing-{{ i }}-notes" type="text" value="{{ row.notes if row else '' }}"
+           maxlength="300" autocomplete="off" placeholder="{{ 'Finely chopped' if n == 1 else 'Notes' }}"
+           {% if row and row.errors.notes %}aria-invalid="true" aria-describedby="ing-{{ i }}-notes-error"{% endif %}>
+    {% if row %}{{ field_error(row.errors.notes, "ing-" ~ i ~ "-notes-error") }}{% endif %}
+  </div>
   <button class="ing-remove" type="button" data-remove-row hidden>
     <span aria-hidden="true">✕</span><span class="sr-only">Remove ingredient</span><span class="sr-only" data-row-number> {{ n }}</span>
   </button>

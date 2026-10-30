@@ -151,7 +151,7 @@ def test_a_rolled_back_save_leaves_the_index_alone(app, pantry, db):
     recipe_id = db.execute("SELECT id FROM recipes WHERE name = 'Shakshuka'").fetchone()[0]
     with pytest.raises(RuntimeError):
         with transaction(db):
-            repo.replace_ingredients(db, user_id, recipe_id, [(0, "anchovies", "", 0)])
+            repo.replace_ingredients(db, user_id, recipe_id, [(0, "anchovies", "", 0, "")])
             raise RuntimeError("boom")
     assert found(pantry, "anchovies") == [] and found(pantry, "peppers") == ["Shakshuka"]
 
@@ -166,7 +166,7 @@ def test_migrating_a_v2_database_indexes_existing_recipes(tmp_path):
                  "VALUES (1, 'Old stew', 'Braise slowly.', 't', 't')")
     conn.execute("INSERT INTO ingredients (recipe_id, position, name) VALUES (1, 0, 'parsnips')")
     conn.close()
-    assert migrate(path) == (2, [3, 4, 5])
+    assert migrate(path) == (2, [3, 4, 5, 6])
     conn = connect(path)
     assert conn.execute("SELECT rowid FROM recipe_text WHERE recipe_text MATCH 'parsnip'").fetchall()[0][0] == 1
     conn.close()

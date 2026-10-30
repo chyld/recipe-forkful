@@ -92,7 +92,7 @@ def test_migrating_a_v3_database_gives_every_recipe_a_public_id(tmp_path):
     conn.execute("INSERT INTO recipe_tags (recipe_id, user_id, tag, position) VALUES (4, 1, 'winter', 0)")
     conn.close()
 
-    assert migrate(path) == (3, [4, 5])
+    assert migrate(path) == (3, [4, 5, 6])
     conn = connect(path)
     public_ids = [r[0] for r in conn.execute("SELECT public_id FROM recipes ORDER BY id")]
     assert len(set(public_ids)) == 4 and all(PUBLIC_ID.fullmatch(p) for p in public_ids)
@@ -118,7 +118,7 @@ def test_migrating_a_v4_database_shortens_every_public_id(tmp_path):
     old_ids = {r[0] for r in conn.execute("SELECT public_id FROM recipes")}
     conn.close()
 
-    assert migrate(path) == (4, [5])
+    assert migrate(path) == (4, [5, 6])
     conn = connect(path)
     new_ids = [r[0] for r in conn.execute("SELECT public_id FROM recipes")]
     assert len(set(new_ids)) == 50 and all(PUBLIC_ID.fullmatch(p) for p in new_ids)

@@ -29,7 +29,7 @@ def test_rows_are_ordered_by_index_and_blank_rows_dropped():
     ])
     parsed = forms.parse_recipe_form(data)
     assert not parsed.has_errors
-    assert parsed.ingredients() == [(0, "First", "1 cup", 0), (1, "Second", "", 0), (2, "Third", "", 3)]
+    assert parsed.ingredients() == [(0, "First", "1 cup", 0, ""), (1, "Second", "", 0, ""), (2, "Third", "", 3, "")]
 
 
 def test_partly_blank_row_is_an_error():
@@ -41,7 +41,7 @@ def test_partly_blank_row_is_an_error():
 def test_missing_field_cannot_shift_rows():
     data = MultiDict([("name", "Soup"), ("ing-0-name", "A"), ("ing-1-name", "B"), ("ing-1-calories", "9")])
     parsed = forms.parse_recipe_form(data)
-    assert parsed.ingredients() == [(0, "A", "", 0), (1, "B", "", 9)]
+    assert parsed.ingredients() == [(0, "A", "", 0, ""), (1, "B", "", 9, "")]
 
 
 def test_limits_match_the_schema():

@@ -108,7 +108,7 @@ def test_migrating_an_existing_v1_database_keeps_everything(tmp_path):
     conn.execute("INSERT INTO users (username, password_hash, created_at) VALUES ('old', 'x', 't')")
     conn.execute("INSERT INTO recipes (user_id, name, created_at, updated_at) VALUES (1, 'Old soup', 't', 't')")
     conn.close()
-    assert migrate(path) == (1, [2, 3, 4, 5])
+    assert migrate(path) == (1, [2, 3, 4, 5, 6])
     conn = connect(path)
     assert conn.execute("SELECT name FROM recipes").fetchone()[0] == "Old soup"
     assert conn.execute("SELECT COUNT(*) FROM recipe_tags").fetchone()[0] == 0

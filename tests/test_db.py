@@ -7,7 +7,7 @@ from forkful.ids import new_public_id
 
 
 def test_fresh_migrate_creates_schema_in_wal_mode(app, db):
-    assert db.execute("PRAGMA user_version").fetchone()[0] == 5
+    assert db.execute("PRAGMA user_version").fetchone()[0] == 6
     assert db.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
     tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
     assert {"users", "sessions", "recipes", "ingredients", "photos", "recipe_tags"} <= tables
@@ -15,7 +15,7 @@ def test_fresh_migrate_creates_schema_in_wal_mode(app, db):
 
 def test_migrate_twice_is_a_no_op_and_keeps_data(app, users, db):
     old, applied = migrate(app.config["DATABASE"])
-    assert (old, applied) == (5, [])
+    assert (old, applied) == (6, [])
     assert db.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 2
 
 

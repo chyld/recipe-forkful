@@ -11,7 +11,7 @@
   <ul class="ingredient-list" role="list">
     {% for i in ingredients %}
       <li class="ingredient">
-        <span class="ingredient-name">{{ i.name }}</span>
+        <span class="ingredient-name">{{ i.name }}{% if i.notes %}<span class="ingredient-notes">{{ i.notes }}</span>{% endif %}</span>
         {% if i.amount %}<span class="ingredient-amount">{{ i.amount }}</span>{% endif %}
         <span class="cal-pill">{{ i.calories|calories }} cal</span>
       </li>

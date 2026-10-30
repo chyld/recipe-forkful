@@ -114,7 +114,7 @@ def get_recipe_by_public_id(db, user_id, public_id):
 def get_ingredients(db, user_id, recipe_id):
     return db.execute(
         """
-        SELECT i.position, i.name, i.amount, i.calories
+        SELECT i.position, i.name, i.amount, i.calories, i.notes
         FROM ingredients i JOIN recipes r ON r.id = i.recipe_id
         WHERE i.recipe_id = ? AND r.user_id = ?
         ORDER BY i.position
@@ -213,13 +213,13 @@ def update_recipe(db, user_id, recipe_id, name, instructions, ts):
 
 
 def replace_ingredients(db, user_id, recipe_id, ingredients):
-    """Replace every ingredient row. `ingredients` is [(position, name, amount, calories)]."""
+    """Replace every ingredient row. `ingredients` is [(position, name, amount, calories, notes)]."""
     owned = "SELECT id FROM recipes WHERE id = ? AND user_id = ?"
     db.execute(f"DELETE FROM ingredients WHERE recipe_id IN ({owned})", (recipe_id, user_id))
     db.executemany(
-        f"INSERT INTO ingredients (recipe_id, position, name, amount, calories) "
-        f"SELECT id, ?, ?, ?, ? FROM recipes WHERE id = ? AND user_id = ?",
-        [(pos, name, amount, cal, recipe_id, user_id) for pos, name, amount, cal in ingredients],
+        f"INSERT INTO ingredients (recipe_id, position, name, amount, calories, notes) "
+        f"SELECT id, ?, ?, ?, ?, ? FROM recipes WHERE id = ? AND user_id = ?",
+        [(pos, name, amount, cal, notes, recipe_id, user_id) for pos, name, amount, cal, notes in ingredients],
     )
 
 
@@ -292,8 +292,8 @@ def fork_recipe(db, user_id, source, name, ts):
     """
     new_id, public_id = insert_recipe(db, user_id, name, source["instructions"], ts, parent_id=source["id"])
     db.execute(
-        "INSERT INTO ingredients (recipe_id, position, name, amount, calories) "
-        "SELECT ?, position, name, amount, calories FROM ingredients WHERE recipe_id = ? ORDER BY position",
+        "INSERT INTO ingredients (recipe_id, position, name, amount, calories, notes) "
+        "SELECT ?, position, name, amount, calories, notes FROM ingredients WHERE recipe_id = ? ORDER BY position",
         (new_id, source["id"]),
     )
     db.execute(

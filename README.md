@@ -3,7 +3,7 @@
 *Cook it. Fork it. Love it.*
 
 Forkful is a private recipe box for a few people. Each person sees only their own recipes.
-- Write recipes with ingredients, amounts, calories, instructions and photos. Total calories are added up for you, and you pick which photo is the cover.
+- Write recipes with ingredients (each with an amount, calories and an optional note like "finely chopped"), instructions and photos. Total calories are added up for you, and you pick which photo is the cover.
 - **Fork** any recipe into a remix. Each recipe shows its parent and its forks.
 - **Tag** recipes, then **search** by tags and by words in names, ingredients and instructions. Sort by calories.
 - **🎲 Random** jumps to one of your recipes.

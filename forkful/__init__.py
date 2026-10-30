@@ -10,7 +10,7 @@ from pathlib import Path
 from flask import Flask, render_template, request, url_for
 from werkzeug.exceptions import HTTPException
 
-__version__ = "1.12.0"   # bump on every release; shown in the footer
+__version__ = "1.13.0"   # bump on every release; shown in the footer
 
 # The Docker build writes the build time here (see Dockerfile); running from a checkout, it's absent.
 BUILD_FILE = Path(__file__).with_name("BUILD")

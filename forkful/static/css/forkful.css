@@ -457,9 +457,11 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] {
 
 /* ingredient rows */
 .ing-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .9rem; counter-reset: ing; }
+/* Named areas, so the notes field can sit on its own line (tablets, phones) or in a column (wide). */
 .ing-row {
   display: grid;
   grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.3fr) 7.5rem 48px;
+  grid-template-areas: "name amount calories remove" "notes notes notes .";
   gap: .6rem;
   align-items: start;
   padding: .6rem;
@@ -467,12 +469,23 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] {
   background: rgb(255 248 236 / .7);
 }
 .ing-row.has-error { background: rgb(168 35 27 / .06); }
+.ing-name { grid-area: name; }
+.ing-amount { grid-area: amount; }
+.ing-calories { grid-area: calories; }
+.ing-notes { grid-area: notes; }
+@media (min-width: 900px) {
+  .ing-row {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) 7.5rem minmax(0, 2fr) 48px;
+    grid-template-areas: "name amount calories notes remove";
+  }
+}
 .ing-field { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
 .ing-field label { font-size: .9rem; }
 .ing-row:not(:first-child) .ing-label-text {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
 .ing-remove {
+  grid-area: remove;
   width: 48px; height: 48px;
   display: grid; place-items: center;
   font: 700 1.2rem/1 var(--font-body);
@@ -497,8 +510,10 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] {
 .live-total strong { font-family: var(--font-display); font-size: 1.15rem; }
 
 @media (max-width: 640px) {
-  .ing-row { grid-template-columns: minmax(0, 1fr) 6.5rem 48px; }
-  .ing-row .ing-name { grid-column: 1 / -1; }
+  .ing-row {
+    grid-template-columns: minmax(0, 1fr) 6.5rem 48px;
+    grid-template-areas: "name name name" "amount calories remove" "notes notes notes";
+  }
 }
 
 /* photos: existing thumbnails with Cover (radio) and Remove (checkbox) controls */
@@ -673,6 +688,7 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] {
   border-bottom: 2px dashed rgb(43 33 24 / .2);
 }
 .ingredient-name { font-weight: 700; flex: 1 1 8rem; }
+.ingredient-notes { display: block; margin-top: .1rem; font-size: .9rem; font-weight: 400; font-style: italic; color: var(--muted); }
 .ingredient-amount { color: var(--muted); }
 .cal-pill {
   font-size: .82rem; font-weight: 800;

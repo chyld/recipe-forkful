@@ -1232,3 +1232,29 @@ Request: "make a button that will convert a recipe detail view to a self contain
     - no cache;
     - a route-level 500 when the stylesheet fails closed;
     - the button's order and layout rules.
+
+## 30. Notes on each ingredient (v1.13.0)
+
+Request: "for the ingredients section, there is name, amount and calories. can you also a "notes" for each ingredient. it is a text field."
+
+- **Schema v6** (`migrations/0006_ingredient_notes.sql`): `ingredients.notes TEXT NOT NULL DEFAULT '' CHECK (length(notes) <= 300)`.
+  - Existing ingredients get `''`.
+  - It's a plain `ALTER TABLE … ADD COLUMN`, with no table rebuild.
+- **Form:** each ingredient row gets a "Notes" field (`ing-N-notes`).
+  - It's one line of up to 300 characters, cleaned like names and amounts (NFC, control characters dropped, trimmed). Over 300 gives the error "Notes can be up to 300 characters."
+  - A row with only a note still needs a name, and a form without notes fields (an edit page opened before the upgrade) saves with empty notes.
+  - **Layout,** with named grid areas:
+    - **900px and up:** one line, name | amount | calories | notes | ✕.
+    - **641–899px:** notes on a second line under the other fields.
+    - **Phones:** three lines: the name; then amount, calories and ✕; then notes.
+  - **Placeholders:** the first row's placeholder is "Finely chopped", like the other first-row examples. Later rows say "Notes", because on narrower screens the notes line has no column heading above it.
+- **Shown:** in small, muted italics under the ingredient's name. The ingredient list is the shared `ingredient_list` macro, so the recipe page and the downloaded file both show them. Ingredients without a note look as before.
+- **Forks** copy each ingredient's note with it.
+- **Not searchable:** notes aren't added to the word search (`recipe_text`), so its triggers and the index check don't change. Adding them later would be a migration that rebuilds the index.
+- **Tests (`tests/test_notes.py`):**
+  - parsing, cleaning, the limit and a note without a name;
+  - the database limit and NOT NULL;
+  - upgrading a populated v5 database;
+  - the recipe page, edit form, re-rendering after a rejected save, and the error message and its `aria-describedby`;
+  - escaping, forks and the downloaded file.
+  - Tests that pinned schema version 5, or four-value ingredient rows, were updated.
